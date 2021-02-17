@@ -3,9 +3,9 @@ import os
 from tqdm import tqdm
 import re 
 
-class LSTM(nn.Module):
+class LSTM(torch.nn.Module):
     ## Init which creates the actual model and loads the latest weights
-    def __init__(self, input_size=1, n_hidden_layers=2, hidden_layer_size=32, output_size=1):
+    def __init__(self, input_size=3, n_hidden_layers=2, hidden_layer_size=32, output_size=1):
         super().__init__()
         self.input_size = input_size
         self.output_size = output_size
@@ -13,9 +13,8 @@ class LSTM(nn.Module):
         self.n_hidden_layers = n_hidden_layers
 
         # Create LSTM layer for prediction and Linear layer for output
-        self.lstm = nn.LSTM(input_size, hidden_layer_size, n_hidden_layers, batch_first=True)
-        self.linear = nn.Linear(hidden_layer_size, output_size)
-
+        self.lstm = torch.nn.LSTM(input_size, hidden_layer_size, n_hidden_layers, batch_first=True)
+        self.linear = torch.nn.Linear(hidden_layer_size, output_size)
     
     # Function that simply puts the input sequence through the neural net and calculates the output
     def forward(self, input_seq):
@@ -43,8 +42,8 @@ class StockPredictor():
     def __init__(self):
         self.model = LSTM()
         self.loss_function = torch.nn.MSELoss()
-        self.optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-        print('Successfully create LSTM model for stock prediction')
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.01)
+        print('Successfully created LSTM model for stock prediction')
         print(self.model)
 
 
@@ -52,6 +51,11 @@ class StockPredictor():
         self.epochs = 150
         self.train_percentage = 0.8
         self.test_percentage = 1-self.train_percentage
+        self.train_sequences = [] 
+        self.test_sequences = []
+
+        # And setup for predicting
+        self.predict_sequences = []
 
     ## Function that take as input multiple pandas time series and converts them to a train and a test set
     def add_train_data(self, inputs):
@@ -115,7 +119,7 @@ class StockPredictor():
         self.model.train()
         assert self.train_sequences.shape[2] == 2, 'Your input sequences do not contain any labels. Are you sure you want to train the model? Shape given by %s' % (self.train_sequences.shape)
         i = 0
-        for sequence, label in self.train_sequences
+        for sequence, label in self.train_sequences:
             # Obtain the prediction of the current sequence
             prediction = self.model(sequence)
 
@@ -125,7 +129,7 @@ class StockPredictor():
             # Print current loss in case we are there
             if i % 25 == 0:
                 print('Epoch %s, MSE: %.2f' % (i, loss.item()))
-            if i % 100 = 0:
+            if i % 100 == 0:
                 print('Saving current checkpoint.')
                 self.save_current_checkpoint()
 
@@ -143,7 +147,7 @@ class StockPredictor():
         self.model.eval()
         predictions = np.array([])
         assert self.train_sequences.shape[2] == 2, 'Your input sequences do not contain any labels. Are you sure you want to train the model?'
-        for sequence in self.input_sequences:
+        for sequence in self.predict_sequences:
             # Execute everything without gradient calculation so that it goes faster
             with torch.no_grad():
                 prediction = self.model(sequence)
