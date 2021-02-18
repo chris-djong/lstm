@@ -1,2 +1,3 @@
 *.pt
 connection.py
+__pycache__/*
