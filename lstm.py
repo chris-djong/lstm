@@ -39,6 +39,8 @@ class LSTMModel():
         optimizer = tensorflow.keras.optimizers.Adam(learning_rate=0.01)
         self.model.compile(optimizer=optimizer, loss='mean_squared_error')
 
+        self.model.load_weights('checkpoints/')
+
     # Function that scale the inputs and outputs and converts the output to a respective label
     # The current labels are given by -1 for a decrease of 3%, 0 for a hold and +1 for an increase of 3% 
     def normalize_sample(self, sample):
